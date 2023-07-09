@@ -5,12 +5,12 @@ time.sleep(5)
 pyautogui.click(908,864)
 pyautogui.typewrite("Hello World (sent with AI)")
 pyautogui.press("enter")
-# Text Grant a message that says "I am a bot"
+# Text Isabel a message that says "I am a bot"
 pyautogui.typewrite("I am a bot")
 pyautogui.press("enter")
 # Open VS Code
 pyautogui.click(1000,865)
-# Take a screenshot of this code and send it to Grant
+# Take a screenshot of this code and send it to Isabel
 pyautogui.hotkey("command", "shift", "4")
 pyautogui.moveTo(445,104)
 pyautogui.dragTo(1380,667,duration=1.5, button="left")
