@@ -81,6 +81,7 @@ pyautogui.moveTo(1390,807, duration=0.5)
 pyautogui.click()
 pyautogui.click()
 placedTowers = []
+currMoney = 650
 while True:
     if currMoney > 250:
       rand = randint(0,10)
