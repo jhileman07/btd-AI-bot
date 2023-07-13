@@ -142,6 +142,8 @@ class TetrisGame:
         self.fall_time = 0
         self.level_time = 0
         self.fall_speed = 0.27
+        self.level = 0
+        self.timedelta = 0
     
     def create_grid(self, locked_positions={}):
         grid = [[(0,0,0) for _ in range(10)] for _ in range(20)]
@@ -361,7 +363,42 @@ class TetrisGame:
         elif action == 3: # do nothing
             pass
         # Falling and level time
-        self.fall_time += timedelta
+        self.fall_time += self.timedelta
+        self.level_time += self.timedelta
+        if self.level_time/1000 > 5:
+            self.level_time = 0
+            if self.fall_speed > 0.12:
+                self.fall_speed -= 0.005
+        if self.fall_time/1000 > self.fall_speed:
+            self.fall_time = 0
+            self.piece.y += 1
+            if not(self.valid_space(self.piece, self.board)) and self.piece.y > 0:
+                self.piece.y -= 1
+                self.change_piece = True
+        # Check for cleared lines
+        cleared_lines = 0
+        for i in range(len(self.board)-1,-1,-1):
+            row = self.board[i]
+            if (0,0,0) not in row:
+                cleared_lines += 1
+                ind = i
+                for j in range(len(row)):
+                    try:
+                        del self.locked_positions[(j,i)]
+                    except:
+                        continue
+        if cleared_lines > 0:
+            for key in sorted(list(self.locked_positions), key=lambda x: x[1])[::-1]:
+                x,y = key
+                if y < ind:
+                    newKey = (x,y+cleared_lines)
+                    self.locked_positions[newKey] = self.locked_positions.pop(key)
+        # Check for game over
+        new_grid = self.create_grid(self.locked_positions)
+        if self.piece.y < 1:
+            self.game_over = True
+        # Check for change piece
+        reward = self.get_reward(self,old_grid,new_grid,cleared_lines,self.game_over)
         return self.get_state(), reward
 
     def get_max_height(self,grid):
@@ -412,3 +449,7 @@ class TetrisGame:
         if game_over:
             reward -= 1000
         return reward
+
+if __name__ == "__main__":
+    TetrisGame()
+    
