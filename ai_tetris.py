@@ -131,6 +131,8 @@ class Piece(object):
         self.shape = shape
         self.color = shape_colors[shapes.index(shape)]
         self.rotation = 0
+        
+
 
 class TetrisGame:
     def __init__(self):
@@ -144,6 +146,7 @@ class TetrisGame:
         self.fall_speed = 0.27
         self.level = 0
         self.timedelta = 0
+        self.win = pygame.display.set_mode((w_width, w_height))
     
     def create_grid(self, locked_positions={}):
         grid = [[(0,0,0) for _ in range(10)] for _ in range(20)]
@@ -243,7 +246,7 @@ class TetrisGame:
         sx = top_left_x + play_width + 50
         sy = top_left_y + play_height/2 - 100
         surface.blit(label, (sx + 20, sy + 160))
-        label = font.render('High Score: ' + last_score, 1, (255,255,255))
+        label = font.render('High Score: ' + str(last_score), 1, (255,255,255))
         sx = top_left_x - 200
         sy = top_left_y + 200
         surface.blit(label, (sx + 20, sy + 160))
@@ -267,18 +270,20 @@ class TetrisGame:
 
     def main_menu(self):
         run = True
+        self.win.fill((0,0,0))
+        self.draw_text_middle('Press any key to begin.', 60, (255, 255, 255), self.win)
+        pygame.display.update()
         while run:
-            self.win.fill((0,0,0))
-            self.draw_text_middle('Press any key to begin.', 60, (255, 255, 255), self.win)
-            pygame.display.update()
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     run = False
                 if event.type == pygame.KEYDOWN:
+                    print("start")
                     self.manual_main()
-        pygame.quit()
     
     def manual_main(self):
+        self.draw_window(self.win, self.board)
+        pygame.display.update()
         last_score = self.max_score()
         locked_positions = {}
         grid = self.create_grid(locked_positions)
@@ -302,7 +307,7 @@ class TetrisGame:
             if fall_time/1000 > fall_speed:
                 fall_time = 0
                 current_piece.y += 1
-                if not(self.valid_space(current_piece, grid)) and current_piece.y > 0:
+                if not(self.valid_space(current_piece)) and current_piece.y > 0:
                     current_piece.y -= 1
                     change_piece = True
             for event in pygame.event.get():
@@ -313,29 +318,37 @@ class TetrisGame:
                 if event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_LEFT:
                         current_piece.x -= 1
-                        if not(self.valid_space(current_piece, grid)):
+                        if not(self.valid_space(current_piece)):
                             current_piece.x += 1
                     elif event.key == pygame.K_RIGHT:
                         current_piece.x += 1
-                        if not(self.valid_space(current_piece, grid)):
+                        if not(self.valid_space(current_piece)):
                             current_piece.x -= 1
                     elif event.key == pygame.K_DOWN:
                         current_piece.y += 1
-                        if not(self.valid_space(current_piece, grid)):
+                        if not(self.valid_space(current_piece)):
                             current_piece.y -= 1
                     elif event.key == pygame.K_UP:
                         current_piece.rotation = current_piece.rotation + 1 % len(current_piece.shape)
-                        if not(self.valid_space(current_piece, grid)):
+                        if not(self.valid_space(current_piece)):
                             current_piece.rotation = current_piece.rotation - 1 % len(current_piece.shape)
             shape_pos = self.convert_shape_format(current_piece)
             for i in range(len(shape_pos)):
                 x, y = shape_pos[i]
                 if y > -1:
                     grid[y][x] = current_piece.color
-            if change_piece:
+            if next_piece:
                 for pos in shape_pos:
                     p = (pos[0], pos[1])
                     locked_positions[p] = current_piece.color
+                current_piece = next_piece
+                next_piece = self.get_shape()
+                change_piece = False
+                self.score += self.clear_rows(grid, locked_positions) * 10
+            self.draw_window(self.win, grid)
+            self.draw_next_shape(next_piece, self.win)
+            pygame.display.update()
+
     
     def reset(self):
         self.__init__()
@@ -451,5 +464,5 @@ class TetrisGame:
         return reward
 
 if __name__ == "__main__":
-    TetrisGame()
-    
+    game = TetrisGame()
+    game.main_menu()
